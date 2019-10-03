@@ -1,4 +1,4 @@
-from Cypto.Cipher import AES
+from Crypto.Cipher import AES
 import base64
 
 BS = 16
@@ -23,7 +23,7 @@ def AES_Encrypt(cipher, data):
 def AES_Decrypt(cipher, data):
     #TODO DATA DECRYPT
     message = base64.b64decode(data)    # byte코드 나옴
-    message = cipher.decode(message.encode("UTF-8"))
+    message = cipher.decrypt(message)
 
     message = unpad(message).decode("UTF-8")
 
