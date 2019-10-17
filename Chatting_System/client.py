@@ -1,16 +1,21 @@
 import socket
 import MCipher
 
+MCipher.createPEM('clientPriKey.pem', 'clientPubKey.pem')
+
 def client_program():
     host = '127.0.0.1'
     port = 5462
+
+    priKey = './clientPriKey.pem'
+    server_pubKey = './puKey.pem'
 
     keyRecive = False
     client_socket = socket.socket()
     client_socket.connect((host, port))
 
     if(keyRecive == False):
-        key = client_socket.recv(1024).decode()
+        key = MCipher.RSADecrypt(MCipher.readPEM(priKey), client_socket.recv(1024))
         print('key : ' + key)
         client_socket.send('key exchange Success'.encode())
         iv = client_socket.recv(1024).decode()
