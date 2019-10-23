@@ -1,6 +1,7 @@
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 import base64
+import hashlib
 
 BS = 16
 pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
@@ -61,3 +62,33 @@ def RSADecrypt(pubKey, data):
     decryptor = PKCS1_OAEP.new(pubKey)
     decrypt = decryptor.decrypt(data)
     return decrypt.decode("UTF-8")
+
+#################################################
+# E[M + Hash(M)]
+#################################################
+
+def sha256(data):
+    hashData = hashlib.sha256(data.encode()).hexdigest()
+    return hashData
+
+def makeHashBlock(data):
+    hashData = sha256(data)
+    hashBlock = '{0:04x}'.format(len(data)) + data + '{0:04x}'.format(len(hashData)) + hashData
+
+    return hashBlock
+
+def separateHashBlock(hashBlock):
+    data_size = int(hashBlock[:4], 16)
+    realData = hashBlock[4 : data_size+4]
+
+    hash_data_size = int(hashBlock[data_size+4:len(hashBlock)], 16)
+    hashData = hashBlock[data_size+8 : hash_data_size]
+
+    return realData, hashData
+
+def integrityCheck(data, hashData):
+    getHashData = sha256(data)
+
+    return getHashData == hashData
+
+

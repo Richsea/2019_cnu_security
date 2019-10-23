@@ -38,9 +38,15 @@ def server_program():
         cipher = MCipher.setAES(key, iv)
         data = rdata.decode('UTF-8')
         data = MCipher.AES_Decrypt(cipher, data)
+        data, hashData = MCipher.separateHashBlock(data)
+        
+        if(not MCipher.integrityCheck(data, hashData)):
+            break
+
         print("Recieved from user2 : " + str(data))
         data = input(' -> ')
         cipher = MCipher.setAES(key, iv)
+        data = MCipher.makeHashBlock(data)
         conn.send(MCipher.AES_Encrypt(cipher, data))
 
     conn.close()
