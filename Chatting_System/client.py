@@ -2,6 +2,7 @@ import socket
 import MCipher
 
 MCipher.createPEM('clientPriKey.pem', 'clientPubKey.pem')
+MCipher.createPEM('clientSignPriKey.pem', 'clientSignPubKey.pem')
 
 def client_program():
     host = '127.0.0.1'
@@ -28,15 +29,21 @@ def client_program():
 
         while message.lower().strip() != 'bye':
             cipher = MCipher.setAES(key, iv)
-            message = MCipher.makeHashBlock(message)
+            message = MCipher.makeHashBlock(message, 'clientSignPriKey.pem')
             client_socket.send(MCipher.AES_Encrypt(cipher, message))
+
             data = client_socket.recv(1024)
             cipher = MCipher.setAES(key, iv)
             data = MCipher.AES_Decrypt(cipher, data.decode("UTF-8"))
 
             data, hashData = MCipher.separateHashBlock(data)
 
+            '''
             if(not MCipher.integrityCheck(data, hashData)):
+                break
+            '''
+
+            if not MCipher.verify('serverPubKey.pem', data, hashData):
                 break
 
             print("Received from user1 : " + data)

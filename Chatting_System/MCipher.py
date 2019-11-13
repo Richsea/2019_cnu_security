@@ -1,5 +1,7 @@
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
 import base64
 import hashlib
 
@@ -71,8 +73,8 @@ def sha256(data):
     hashData = hashlib.sha256(data.encode()).hexdigest()
     return hashData
 
-def makeHashBlock(data):
-    hashData = sha256(data)
+def makeHashBlock(data, priKey):
+    hashData = sign(priKey, data)
     hashBlock = '{0:04x}'.format(len(data)) + data + '{0:04x}'.format(len(hashData)) + hashData
 
     return hashBlock
@@ -86,9 +88,35 @@ def separateHashBlock(hashBlock):
 
     return realData, hashData
 
+'''
 def integrityCheck(data, hashData):
     getHashData = sha256(data)
 
     return getHashData == hashData
+'''
 
+###################################################
+# Electronic signature
+###################################################
 
+def sign(priKey, hashData):
+    hasher = SHA256.new(hashData.encode('UTF-8'))
+    hasher = hasher.hexdigest()
+    
+    signer = PKCS1_v1_5.new(readPEM(priKey))
+    signature = signer.sign(hasher)
+
+    print(signature)
+
+    return signature
+
+def verify(pubKey, message, signData):  # message는 message를 복호화 해서 hash화 한 값
+    verifier = PKCS1_v1_5.new(readPEM(pubKey))
+    hasher = SHA256.new(message.encode())
+    if verifier.verify(hasher, signData):
+        print("it is user message")
+    else:
+        print("no!")
+        return False
+
+    return True
