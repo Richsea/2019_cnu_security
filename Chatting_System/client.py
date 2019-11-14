@@ -43,7 +43,7 @@ def client_program():
                 break
             '''
 
-            if not MCipher.verify('serverPubKey.pem', data, hashData):
+            if not MCipher.verify('serverSignPriKey.pem', data, hashData):
                 break
 
             print("Received from user1 : " + data)

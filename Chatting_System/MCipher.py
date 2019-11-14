@@ -74,17 +74,17 @@ def sha256(data):
     return hashData
 
 def makeHashBlock(data, priKey):
-    hashData = sign(priKey, data)
-    hashBlock = '{0:04x}'.format(len(data)) + data + '{0:04x}'.format(len(hashData)) + hashData
+    #hashData = sha256(data)
+    signedHash = sign(priKey, data)
+    hashBlock = '{0:04x}'.format(len(data)) + data + '{0:04x}'.format(len(signedHash)) + signedHash
 
     return hashBlock
 
 def separateHashBlock(hashBlock):
     data_size = int(hashBlock[:4], 16)
-    realData = hashBlock[4 : data_size+4]
-
-    hash_data_size = int(hashBlock[data_size+4:len(hashBlock)], 16)
-    hashData = hashBlock[data_size+8 : hash_data_size]
+    realData = hashBlock[4:data_size+4]
+    hash_data_size = int(hashBlock[data_size+4:data_size+8], 16)
+    hashData = hashBlock[data_size + 8:data_size+hash_data_size+8]
 
     return realData, hashData
 
@@ -100,19 +100,22 @@ def integrityCheck(data, hashData):
 ###################################################
 
 def sign(priKey, hashData):
-    hasher = SHA256.new(hashData.encode('UTF-8'))
-    hasher = hasher.hexdigest()
-    
+    hasher = SHA256.new(hashData.encode("UTF-8"))
+
     signer = PKCS1_v1_5.new(readPEM(priKey))
     signature = signer.sign(hasher)
 
-    print(signature)
+    signature = base64.b64encode(signature)
 
-    return signature
+    return signature.decode('utf-8')
 
 def verify(pubKey, message, signData):  # message는 message를 복호화 해서 hash화 한 값
     verifier = PKCS1_v1_5.new(readPEM(pubKey))
-    hasher = SHA256.new(message.encode())
+    hasher = SHA256.new(message.encode("UTF-8"))
+
+    signData = signData.encode('utf-8')
+    signData = base64.b64decode(signData)
+
     if verifier.verify(hasher, signData):
         print("it is user message")
     else:
